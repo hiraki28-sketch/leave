@@ -46,7 +46,7 @@ async function doLogout(){try{await call('logout',T);}catch(e){}
   $('id').value='';$('pin').value='';$('login').style.display='';}
 async function boot(r){HOME=await call('getHome',T);const staff=r.role==='admin'||r.role==='advisor';
   $('top').textContent=(HOME.name||r.name)+(r.role==='admin'?' · ผู้ดูแล':r.role==='advisor'?' · อาจารย์ปกครอง (ดูอย่างเดียว)':'');
-  const tabs=[];if(r.role!=='advisor')tabs.push(['mine','ลาของฉัน']);if(staff)tabs.push(['day','รายงาน/จัดการ'],['sum','สรุปรายคน']);if(r.role!=='advisor')tabs.push(['me','ข้อมูลของฉัน']);if(staff)tabs.push(['fr','ข้อมูลเพื่อน'],['dty','ตารางเวร']);tabs.push(['acct','เปลี่ยน PIN']);
+  const tabs=[];if(r.role!=='advisor')tabs.push(['mine','ลาของฉัน']);if(staff)tabs.push(['day','รายงาน/จัดการ'],['sum','สรุปรายคน']);if(r.role!=='advisor')tabs.push(['me','ข้อมูลของฉัน']);if(staff)tabs.push(['fr','ข้อมูลเพื่อน']);tabs.push(['dty','ตารางเวร']);tabs.push(['acct','เปลี่ยน PIN']);
   $('tabs').replaceChildren(...tabs.map(([k,t])=>h('button',{class:k===TAB?'on':'',onclick:()=>{TAB=k;boot2(r);}},t)));
   TAB=tabs.some(x=>x[0]===TAB)?TAB:tabs[0][0];window.ROLE=r.role;window.ME=r;render();}
 async function boot2(r){HOME=await call('getHome',T);boot(r);}
@@ -389,7 +389,7 @@ function friendForm(f,opt){f=f||{};const F={},out=h('div'),b=h('button',null,opt
     ...inp('nick','ชื่อเล่น',1,{maxlength:'50'}),h('label',null,'วันเกิด *'),dob,
     ...inp('pos','ตำแหน่ง',1,{placeholder:'ตำแหน่งตามบัญชีอัตรา'}),...inp('actual','ปฏิบัติงานจริง',1,{placeholder:'หน้าที่/หน่วยที่ปฏิบัติงานจริง'}),
     h('label',null,'ศาสนา *'),rel,relOther,
-    h('label',null,'อาหารที่แพ้'),mk('allergy',noneToBlank(f.allergy)),h('label',null,'อาหารที่ไม่ทาน'),mk('avoid',noneToBlank(f.avoid)),h('label',null,'โรคประจำตัว'),mk('disease',noneToBlank(f.disease)),
+    ...(opt.noHealth?[]:[h('label',null,'อาหารที่แพ้'),mk('allergy',noneToBlank(f.allergy))]),h('label',null,'อาหารที่ไม่ทาน'),mk('avoid',noneToBlank(f.avoid)),...(opt.noHealth?[]:[h('label',null,'โรคประจำตัว'),mk('disease',noneToBlank(f.disease))]),
     ...inp('phone','เบอร์โทร',1,{type:'tel',inputmode:'tel',placeholder:'08x-xxx-xxxx'}),
     h('h3',{style:'margin-top:14px'},'ผู้ติดต่อได้กรณีฉุกเฉิน'),...inp('ecName','ชื่อ-สกุล',1),...inp('ecPhone','เบอร์โทร',1,{type:'tel',inputmode:'tel'}),...inp('ecRel','ความสัมพันธ์',1,{placeholder:'เช่น คู่สมรส / บิดา / มารดา / บุตร'}),
     h('div',{style:'margin-top:12px'},b),out);
@@ -403,25 +403,25 @@ async function viewMe(){const v=$('view');v.replaceChildren(h('div',{class:'c mu
 const FRIEND_COLS=[['id','รหัส'],['name','ยศ-ชื่อ-สกุล'],['group','หมู่'],['nick','ชื่อเล่น'],['dob','วันเกิด'],['pos','ตำแหน่ง'],['actual','ปฏิบัติงานจริง'],['religion','ศาสนา'],['allergy','อาหารที่แพ้'],['avoid','อาหารที่ไม่ทาน'],['disease','โรคประจำตัว'],['phone','เบอร์โทร'],['ecName','ผู้ติดต่อฉุกเฉิน'],['ecPhone','เบอร์ผู้ติดต่อฉุกเฉิน'],['ecRel','ความสัมพันธ์'],['at','บันทึกเมื่อ']];
 async function viewFriends(){const v=$('view');v.replaceChildren(h('div',{class:'c muted'},'กำลังโหลด...'));let rows;
   try{rows=await call('staffFriends',T);}catch(e){v.replaceChildren(h('div',{class:'c e'},e.message));return;}
-  const groups=[...new Set(rows.map(r=>r.group))],canEdit=ROLE==='admin';let q='',grp='',todo=false,open=null;
+  const groups=[...new Set(rows.map(r=>r.group))],canEdit=ROLE==='admin',hh=rows.some(r=>r.hh),COLS=FRIEND_COLS.filter(c=>!(hh&&(c[0]==='allergy'||c[0]==='disease')));let q='',grp='',todo=false,open=null;
   const gSel=h('select',null,h('option',{value:''},'ทุกหมู่'),...groups.map(g=>h('option',{value:g},g))),qIn=h('input',{placeholder:'ค้นหาชื่อ/ชื่อเล่น/เบอร์'}),
     cb=h('input',{type:'checkbox',style:'width:auto'}),sum=h('div',{class:'muted'}),box=h('div'),det=h('div');
   const csvBtn=h('button',{class:'s',onclick:()=>{const esc=x=>'"'+String(x==null?'':x).replace(/"/g,'""')+'"';
-    const csv='﻿'+[FRIEND_COLS.map(c=>esc(c[1])).join(',')].concat(rows.map(r=>FRIEND_COLS.map(c=>esc(r[c[0]])).join(','))).join('\r\n');
+    const csv='﻿'+[COLS.map(c=>esc(c[1])).join(',')].concat(rows.map(r=>COLS.map(c=>esc(r[c[0]])).join(','))).join('\r\n');
     save(new Blob([csv],{type:'text/csv'}),'ข้อมูลเพื่อน.csv');}},'ดาวน์โหลด CSV (Excel)');
   function showDetail(r){open=r.id;det.replaceChildren();
     const info=h('div',{class:'c'},h('h3',null,r.id+' · '+r.name),h('div',{class:'muted'},r.done?'บันทึกเมื่อ '+r.at:'ยังไม่ได้กรอก'),
-      ...(r.done?FRIEND_COLS.slice(3).map(c=>h('div',{style:'margin-top:4px'},h('b',null,c[1]+': '),r[c[0]]||'-')):[]),
+      ...(r.done?COLS.slice(3).map(c=>h('div',{style:'margin-top:4px'},h('b',null,c[1]+': '),r[c[0]]||'-')):[]),
       h('div',{style:'margin-top:8px'},h('button',{class:'s',onclick:()=>{det.replaceChildren();open=null;}},'ปิด')));
     det.append(info);
-    if(canEdit)det.append(friendForm(r.done?r:null,{title:r.done?'แก้ไขข้อมูลแทน':'กรอกแทน',note:'แอดมินกรอก/แก้แทนได้ (บันทึกประวัติไว้)',btn:'บันทึกแทน',onSave:async p=>{await call('staffSaveFriend',T,r.id,p);rows=await call('staffFriends',T);draw();}}));
+    if(canEdit)det.append(friendForm(r.done?r:null,{noHealth:hh,title:r.done?'แก้ไขข้อมูลแทน':'กรอกแทน',note:'แอดมินกรอก/แก้แทนได้ (บันทึกประวัติไว้)',btn:'บันทึกแทน',onSave:async p=>{await call('staffSaveFriend',T,r.id,p);rows=await call('staffFriends',T);draw();}}));
     det.scrollIntoView({behavior:'smooth'});}
   function draw(){const L=rows.filter(r=>(!grp||r.group===grp)&&(!todo||!r.done)&&(!q||(r.name+r.nick+r.phone+r.id).toLowerCase().includes(q.toLowerCase())));
     const done=rows.filter(r=>r.done).length;sum.textContent='กรอกแล้ว '+done+' / '+rows.length+' คน · แสดง '+L.length+' รายการ';
     box.replaceChildren(h('table',null,h('tr',null,h('th',null,'รหัส'),h('th',null,'ชื่อ'),h('th',null,'หมู่'),h('th',null,'ชื่อเล่น'),h('th',null,'เบอร์'),h('th',null,'สถานะ')),
       ...L.map(r=>{const tr=h('tr',{style:'cursor:pointer',onclick:()=>showDetail(r)},h('td',null,r.id),h('td',null,r.name),h('td',null,r.group),h('td',null,r.nick||''),h('td',null,r.phone||''),h('td',{class:r.done?'':'warn'},r.done?'✓':'ยังไม่กรอก'));return tr;})));}
   gSel.onchange=()=>{grp=gSel.value;draw();};qIn.oninput=()=>{q=qIn.value;draw();};cb.onchange=()=>{todo=cb.checked;draw();};
-  v.replaceChildren(h('div',{class:'c'},h('h3',null,'ข้อมูลเพื่อน'),h('div',{class:'two'},gSel,qIn),h('label',{style:'display:flex;gap:6px;align-items:center'},cb,'เฉพาะคนที่ยังไม่กรอก'),sum,h('div',{style:'margin-top:6px'},csvBtn),h('div',{class:'muted',style:'margin-top:6px'},'ข้อมูลสุขภาพ/ผู้ติดต่อฉุกเฉินเป็นข้อมูลส่วนบุคคล ใช้เฉพาะผู้ดูแลและอาจารย์ปกครอง'),box),det);draw();}
+  v.replaceChildren(h('div',{class:'c'},h('h3',null,'ข้อมูลเพื่อน'),h('div',{class:'two'},gSel,qIn),h('label',{style:'display:flex;gap:6px;align-items:center'},cb,'เฉพาะคนที่ยังไม่กรอก'),sum,h('div',{style:'margin-top:6px'},csvBtn),h('div',{class:'muted',style:'margin-top:6px'},(hh?'ข้อมูลสุขภาพ (อาหารที่แพ้/โรคประจำตัว) ดูได้เฉพาะแอดมินหลักและอาจารย์ปกครอง · ':'')+'ข้อมูลส่วนบุคคล ใช้เฉพาะผู้ดูแลและอาจารย์ปกครอง'),box),det);draw();}
 
 /* ---------- ตารางเวร (หน้าจอจัดเวรเดิม ฝังเป็น iframe ใช้ session ของระบบลา) ---------- */
 function viewDuty(){const v=$('view');v.replaceChildren();
