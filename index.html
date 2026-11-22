@@ -418,8 +418,8 @@ async function viewFriends(){const v=$('view');v.replaceChildren(h('div',{class:
     det.scrollIntoView({behavior:'smooth'});}
   function draw(){const L=rows.filter(r=>(!grp||r.group===grp)&&(!todo||!r.done)&&(!q||(r.name+r.nick+r.phone+r.id).toLowerCase().includes(q.toLowerCase())));
     const done=rows.filter(r=>r.done).length;sum.textContent='กรอกแล้ว '+done+' / '+rows.length+' คน · แสดง '+L.length+' รายการ';
-    box.replaceChildren(h('table',null,h('tr',null,h('th',null,'รหัส'),h('th',null,'ชื่อ'),h('th',null,'หมู่'),h('th',null,'ชื่อเล่น'),h('th',null,'เบอร์'),h('th',null,'LINE ID'),h('th',null,'สถานะ')),
-      ...L.map(r=>{const tr=h('tr',{style:'cursor:pointer',onclick:()=>showDetail(r)},h('td',null,r.id),h('td',null,r.name),h('td',null,r.group),h('td',null,r.nick||''),h('td',null,r.phone||''),h('td',null,r.line||''),h('td',{class:r.done?'':'warn'},r.done?'✓':'ยังไม่กรอก'));return tr;})));}
+    box.replaceChildren(h('table',null,h('tr',null,h('th',null,'รหัส'),h('th',null,'ชื่อ'),h('th',null,'หมู่'),h('th',null,'ชื่อเล่น'),h('th',null,'เบอร์'),h('th',null,'สถานะ')),
+      ...L.map(r=>{const tr=h('tr',{style:'cursor:pointer',onclick:()=>showDetail(r)},h('td',null,r.id),h('td',null,r.name),h('td',null,r.group),h('td',null,r.nick||''),h('td',null,r.phone||''),h('td',{class:r.done?'':'warn'},r.done?'✓':'ยังไม่กรอก'));return tr;})));}
   gSel.onchange=()=>{grp=gSel.value;draw();};qIn.oninput=()=>{q=qIn.value;draw();};cb.onchange=()=>{todo=cb.checked;draw();};
   v.replaceChildren(h('div',{class:'c'},h('h3',null,'ข้อมูลเพื่อน'),h('div',{class:'two'},gSel,qIn),h('label',{style:'display:flex;gap:6px;align-items:center'},cb,'เฉพาะคนที่ยังไม่กรอก'),sum,lite?null:h('div',{style:'margin-top:6px'},csvBtn),h('div',{class:'muted',style:'margin-top:6px'},(hh?'ข้อมูลสุขภาพ (อาหารที่แพ้/โรคประจำตัว) ดูได้เฉพาะแอดมินหลักและอาจารย์ปกครอง · ':'')+(lite?'ข้อมูลส่วนบุคคล ใช้ติดต่อภายในรุ่นเท่านั้น ไม่เผยแพร่ต่อ · ไม่แสดงศาสนา อาหาร โรค และผู้ติดต่อฉุกเฉิน':'ข้อมูลส่วนบุคคล ใช้เฉพาะผู้ดูแลและอาจารย์ปกครอง')),box),det);draw();}
 
