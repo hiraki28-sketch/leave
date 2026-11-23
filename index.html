@@ -84,9 +84,7 @@ function leaveForm(opt){
 function bar(used,limit){const p=limit>0?Math.min(100,Math.max(0,used/limit*100)):100;return h('div',{class:'bar'},h('i',{class:p>=100?'w3':p>=75?'w2':'',style:'width:'+p+'%'}));}
 function viewMine(){const q=HOME.quota,v=$('view');v.replaceChildren();
   if(q){v.append(h('div',{class:'c'},h('h3',null,'ชั่วโมงลาคงเหลือ'),
-    h('div',null,h('b',{style:'font-size:1.6em'},q.remaining),' ชม. ที่ลาได้อีก (ใช้ไป '+q.used+' / '+q.totalLimit+' ชม.)'),bar(q.used,q.totalLimit),
-    h('table',{style:'margin-top:10px'},h('tr',null,h('th',null,'หมวดวิชา'),h('th',null,'ใช้ไป'),h('th',null,'ลาได้'),h('th',null,'คงเหลือ')),
-      q.modules.map(m=>h('tr',null,h('td',null,m.name),h('td',null,m.used),h('td',null,m.limit),h('td',{class:m.remaining<=3?'warn':''},m.remaining))))));}
+    h('div',null,h('b',{style:'font-size:1.6em'},q.remaining),' ชม. ที่ลาได้อีก (ใช้ไป '+q.used+' / '+q.totalLimit+' ชม.)'),bar(q.used,q.totalLimit)));}
   v.append(h('div',{class:'c'},h('h3',null,'ยื่นลา'),leaveForm({onDone:async(r)=>{HOME=await call('getHome',T);viewMine();if(r&&r.batch)signFlow(r.batch);}})));
   const list=h('div',{class:'c'},h('h3',null,'รายการลาของฉัน'),h('div',{class:'muted'},'หลังบันทึกลา ระบบเปิดหน้าลงลายมือชื่อให้ทันที (เซ็นด้วยนิ้วหรือเมาส์ แล้วกดบันทึก) · ยกเลิกหรือแก้ลายมือชื่อได้ถึง 16:00 ของวันก่อนวันลา'));
   if(!HOME.mine.length)list.append(h('div',{class:'muted'},'ยังไม่มีรายการ'));
