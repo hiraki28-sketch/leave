@@ -118,7 +118,12 @@ async function ensureFonts(){
       if(document.fonts.check(F(40,0),FONT_SAMPLE)&&document.fonts.check(F(40,1),FONT_SAMPLE))break;
       await new Promise(r=>setTimeout(r,150));}
     await new Promise(r=>setTimeout(r,50));}catch(e){}}
+/* canvas ที่ไม่ได้อยู่ในหน้าเว็บ (สร้างตอนดาวน์โหลด/เซ็นชื่อ) บางเบราว์เซอร์ (iOS) ใช้ฟอนต์ต่างจากตอนแสดงตัวอย่าง ทำให้ตัวอักษรซ้อนกัน จึงวางไว้ในหน้าเว็บ (นอกจอ) ชั่วคราวระหว่างวาด */
 async function drawLeaveForm(cv,f,sig){
+  const tmp=!cv.isConnected;
+  if(tmp){cv.style.cssText='position:fixed;left:-20000px;top:0;width:100px;height:140px;pointer-events:none';document.body.appendChild(cv);}
+  try{await drawLeaveForm0(cv,f,sig);}finally{if(tmp)cv.remove();}}
+async function drawLeaveForm0(cv,f,sig){
   await ensureFonts();
   const W=1654,H=2339,ctx=cv.getContext('2d');cv.width=W;cv.height=H;ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);ctx.fillStyle='#000';ctx.textBaseline='alphabetic';
   const FS=31,XL=190,XR=1464,font=b=>(b?'700 ':'400 ')+FS+'px Sarabun, "Noto Sans Thai", sans-serif';ctx.font=font(0);
