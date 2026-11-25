@@ -110,7 +110,7 @@ function viewAcct(){const o=h('input',{type:'password',inputmode:'numeric',maxle
 const TH_ML=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
 function thParts(ds){if(!ds)return {d:'',m:'',y:''};const p=ds.split('-').map(Number);return {d:thn(p[2]),m:TH_ML[p[1]-1],y:thn(p[0]+543)};}
 async function drawLeaveForm(cv,f,sig){
-  try{await document.fonts.load(F(40,1));await document.fonts.load(F(40,0));}catch(e){}
+  try{await document.fonts.load(F(40,1),FONT_SAMPLE);await document.fonts.load(F(40,0),FONT_SAMPLE);}catch(e){}
   const W=1654,H=2339,ctx=cv.getContext('2d');cv.width=W;cv.height=H;ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);ctx.fillStyle='#000';ctx.textBaseline='alphabetic';
   const FS=31,XL=190,XR=1464,font=b=>(b?'700 ':'400 ')+FS+'px Sarabun, "Noto Sans Thai", sans-serif';ctx.font=font(0);
   const tw=s=>ctx.measureText(s).width,txt=(s,x,y,al)=>{ctx.textAlign=al||'left';ctx.fillText(s,x,y);ctx.textAlign='left';};
@@ -221,6 +221,7 @@ function thDate(s){const p=s.split('-').map(Number),d=new Date(Date.UTC(p[0],p[1
 const imgs={};function loadImg(k,src){return new Promise(r=>{if(imgs[k])return r(imgs[k]);const i=new Image();i.onload=()=>{imgs[k]=i;r(i);};i.src=src;});}
 function wrapLines(ctx,text,maxW){const out=[];let cur='';for(const ch of text){if(ctx.measureText(cur+ch).width>maxW&&cur){out.push(cur);cur=ch;}else cur+=ch;}if(cur)out.push(cur);return out;}
 const F=(px,b)=>(b?'700 ':'400 ')+px+'px Sarabun, "Noto Sans Thai", sans-serif';
+const FONT_SAMPLE='ก ข ค ๑ ๒ ๓ พ.ศ. ABC abc 0123'; /* ต้องใส่ตัวอย่างข้อความ มิฉะนั้นเบราว์เซอร์โหลดเฉพาะชุดอักษรละติน ไม่โหลดชุดไทย ทำให้วัดความกว้างผิดและตัวอักษรซ้อนกัน */
 
 function layoutBody(ctx,d,fs,draw){
   const X0=110,LH=Math.round(fs*1.64);let y=815;
@@ -242,7 +243,7 @@ function layoutBody(ctx,d,fs,draw){
   return y;}
 
 async function drawReport(canvas,d,venue){
-  try{await document.fonts.load(F(40,1));await document.fonts.load(F(40,0));}catch(e){}
+  try{await document.fonts.load(F(40,1),FONT_SAMPLE);await document.fonts.load(F(40,0),FONT_SAMPLE);}catch(e){}
   const [L,R]=await Promise.all([loadImg('l',LOGO_L),loadImg('r',LOGO_R)]);
   const W=1688,H=2190,ctx=canvas.getContext('2d');canvas.width=W;canvas.height=H;
   ctx.fillStyle='#e6e6e6';ctx.fillRect(0,0,W,H);ctx.fillStyle='#FFC000';ctx.fillRect(0,0,W,630);
@@ -329,7 +330,7 @@ const TH_MONTHS=['มกราคม','กุมภาพันธ์','มี�
 function sortRows(rs,mode){const c=(a,b)=>a<b?-1:a>b?1:0;return rs.slice().sort((x,y)=>mode==='group'?(c(x.group,y.group)||c(x.id,y.id)):mode==='remain'?(x.remaining-y.remaining||c(x.id,y.id)):c(x.id,y.id));}
 /** วาดรายงานสรุปชั่วโมงลาเป็นหน้า A4 (หลายหน้า) แล้วรวมเป็น PDF */
 async function buildSumPdf(rep,rows,title,sub,showPeriod){
-  try{await document.fonts.load(F(30,1));await document.fonts.load(F(30,0));}catch(e){}
+  try{await document.fonts.load(F(30,1),FONT_SAMPLE);await document.fonts.load(F(30,0),FONT_SAMPLE);}catch(e){}
   const W=1240,H=1754,PER=36,RH=38,pages=[],cols=showPeriod
     ?[['ที่',60,'c'],['รหัส',70,'c'],['ยศ-ชื่อ-สกุล',330,'l'],['หมู่',90,'c'],['ลากิจ',80,'c'],['ลาป่วย',80,'c'],['ลา ๓ ชม.',100,'c'],['รวมเดือนนี้',120,'c'],['สะสม',80,'c'],['ลาได้',80,'c'],['เหลือ',80,'c']]
     :[['ที่',60,'c'],['รหัส',70,'c'],['ยศ-ชื่อ-สกุล',430,'l'],['หมู่',100,'c'],['ลากิจ',80,'c'],['ลาป่วย',80,'c'],['ลา ๓ ชม.',90,'c'],['รวมที่ลา',90,'c'],['ลาได้',80,'c'],['เหลือ',80,'c']];
