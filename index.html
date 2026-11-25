@@ -85,8 +85,8 @@ function bar(used,limit){const p=limit>0?Math.min(100,Math.max(0,used/limit*100)
 function viewMine(){const q=HOME.quota,v=$('view');v.replaceChildren();
   if(q){v.append(h('div',{class:'c'},h('h3',null,'ชั่วโมงลาคงเหลือ'),
     h('div',null,h('b',{style:'font-size:1.6em'},q.remaining),' ชม. ที่ลาได้อีก (ใช้ไป '+q.used+' / '+q.totalLimit+' ชม.)'),bar(q.used,q.totalLimit)));}
-  v.append(h('div',{class:'c'},h('h3',null,'ยื่นลา'),leaveForm({onDone:async(r)=>{HOME=await call('getHome',T);viewMine();if(r&&r.batch)signFlow(r.batch);}})));
-  const list=h('div',{class:'c'},h('h3',null,'รายการลาของฉัน'),h('div',{class:'muted'},'หลังบันทึกลา ระบบเปิดหน้าลงลายมือชื่อให้ทันที (เซ็นด้วยนิ้วหรือเมาส์ แล้วกดบันทึก) · ยกเลิกหรือแก้ลายมือชื่อได้ถึง 16:00 ของวันก่อนวันลา'));
+  v.append(h('div',{class:'c'},h('h3',null,'ยื่นลา'),leaveForm({onDone:async(r)=>{HOME=await call('getHome',T);viewMine();}})));
+  const list=h('div',{class:'c'},h('h3',null,'รายการลาของฉัน'),h('div',{class:'muted'},'หลังบันทึกลา กด "ดาวน์โหลดใบลา" เพื่อพิมพ์และเซ็นด้วยปากกา · ยกเลิกได้ถึง 16:00 ของวันก่อนวันลา'));
   if(!HOME.mine.length)list.append(h('div',{class:'muted'},'ยังไม่มีรายการ'));
   HOME.mine.forEach(l=>{const st=h('span',{class:l.status==='active'?'':'muted'},l.status==='active'?'':'(ยกเลิกแล้ว)');
     const row=h('div',{class:'row'},h('div',{class:'g'},h('b',null,l.date+' '+l.type+slotTxt(l)),' · '+l.hours+' ชม. ',st,h('div',{class:'muted'},l.reason)));
@@ -190,44 +190,14 @@ async function dlForm(batch,btn){const t0=btn.textContent;btn.disabled=true;btn.
 async function dlSigned(batch,btn){const t0=btn.textContent;btn.disabled=true;btn.textContent='กำลังดาวน์โหลด...';
   try{const r=await call('getSignedFile',T,batch);save(new Blob([b64ToBytes(r.b64)],{type:r.mime}),r.name);btn.textContent=t0;}catch(e){btn.textContent=e.message;}btn.disabled=false;}
 function docControls(l,mine){
-  const st=h('span',{class:l.hasFile?'ok':'warn',style:'font-size:.85em'},l.hasFile?'ลงลายมือชื่อแล้ว ✓':'ยังไม่ได้ลงลายมือชื่อ'),
-    box=h('div',{style:'flex-basis:100%;display:flex;gap:6px;flex-wrap:wrap;align-items:center'});
-  if(mine&&(!l.hasFile||l.canCancel))box.append(h('button',{class:'s',onclick:()=>signFlow(l.batch)},l.hasFile?'ลงลายมือชื่อใหม่':'ลงลายมือชื่อ'));
-  if(l.hasFile){const b2=h('button',{class:'s',onclick:()=>dlSigned(l.batch,b2)},'ดาวน์โหลด PDF (ลงชื่อแล้ว)');box.append(b2);}
-  else{const b1=h('button',{class:'s',onclick:()=>dlForm(l.batch,b1)},'ดาวน์โหลดใบลา (ยังไม่ลงชื่อ)');box.append(b1);}
-  box.append(st);return box;}
+  const box=h('div',{style:'flex-basis:100%;display:flex;gap:6px;flex-wrap:wrap;align-items:center'});
+  const b1=h('button',{class:'s',onclick:()=>dlForm(l.batch,b1)},'ดาวน์โหลดใบลา (พิมพ์แล้วเซ็นด้วยปากกา)');box.append(b1);
+  if(l.hasFile){const b2=h('button',{class:'s',onclick:()=>dlSigned(l.batch,b2)},'ดาวน์โหลด PDF (ไฟล์เดิมที่ลงชื่อไว้)');box.append(b2);}
+  return box;}
 function blobToB64(bl){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(',')[1]);r.onerror=()=>rej(new Error('อ่านไฟล์ไม่ได้'));r.readAsDataURL(bl);});}
 function trimCanvas(c){const x=c.getContext('2d'),d=x.getImageData(0,0,c.width,c.height).data;let x0=c.width,y0=c.height,x1=-1,y1=-1;
   for(let y=0;y<c.height;y++)for(let i=0;i<c.width;i++)if(d[(y*c.width+i)*4+3]>10){if(i<x0)x0=i;if(i>x1)x1=i;if(y<y0)y0=y;if(y>y1)y1=y;}
   if(x1<0)return null;const o=document.createElement('canvas');o.width=x1-x0+1;o.height=y1-y0+1;o.getContext('2d').drawImage(c,x0,y0,o.width,o.height,0,0,o.width,o.height);return o;}
-/** หน้าลงลายมือชื่อ: เซ็นบนจอ → ประกอบลงใบลา → บันทึกเป็น PDF อัตโนมัติ */
-async function signFlow(batch){
-  const ov=h('div',{style:'position:fixed;inset:0;background:#fff;z-index:98;overflow:auto;padding:12px'});document.body.appendChild(ov);
-  ov.append(h('div',{class:'muted'},'กำลังเตรียมใบลา...'));
-  const done=async()=>{ov.remove();try{HOME=await call('getHome',T);}catch(e){}if(TAB==='mine')viewMine();};
-  let f;try{f=await call('getLeaveForm',T,batch);}catch(e){ov.replaceChildren(h('div',{class:'c e'},e.message),h('button',{class:'s',onclick:done},'ปิด'));return;}
-  const pad=h('canvas',{style:'touch-action:none;width:100%;max-width:700px;display:block;margin:6px auto;border:2px dashed #2d5a45;border-radius:8px;background:#fff;cursor:crosshair'}),prev=h('canvas',{style:'max-width:700px;display:block;margin:8px auto'}),out=h('div');
-  pad.width=1000;pad.height=320;const px=pad.getContext('2d');px.lineWidth=6;px.lineCap='round';px.lineJoin='round';px.strokeStyle='#0b3fd1';
-  let drawing=false,ink=false;const pos=e=>{const r=pad.getBoundingClientRect();return [(e.clientX-r.left)*pad.width/r.width,(e.clientY-r.top)*pad.height/r.height];};
-  pad.addEventListener('pointerdown',e=>{drawing=true;ink=true;pad.setPointerCapture(e.pointerId);const p=pos(e);px.beginPath();px.moveTo(p[0],p[1]);px.lineTo(p[0]+0.1,p[1]+0.1);px.stroke();e.preventDefault();});
-  pad.addEventListener('pointermove',e=>{if(!drawing)return;const p=pos(e);px.lineTo(p[0],p[1]);px.stroke();e.preventDefault();});
-  ['pointerup','pointercancel','pointerleave'].forEach(n=>pad.addEventListener(n,()=>{drawing=false;}));
-  const clear=h('button',{class:'s',onclick:()=>{px.clearRect(0,0,pad.width,pad.height);ink=false;}},'ล้าง'),
-    skip=h('button',{class:'s',onclick:done},'ไว้ทีหลัง'),
-    ok=h('button',null,'บันทึกลายมือชื่อ');
-  ok.onclick=async()=>{if(!ink){msg(out,'กรุณาเซ็นชื่อในกรอบก่อน','e');return;}const sg=trimCanvas(pad);if(!sg){msg(out,'กรุณาเซ็นชื่อในกรอบก่อน','e');return;}
-    ok.disabled=true;ok.textContent='กำลังบันทึก...';
-    try{const cv=document.createElement('canvas');await drawLeaveForm(cv,f,sg);const jd=cv.toDataURL('image/jpeg',0.88),pdf=makePdf(b64ToBytes(jd.split(',')[1]),cv.width,cv.height);
-      await call('attachSigned',T,batch,'application/pdf',await blobToB64(pdf));
-      const nm='ใบลา-'+f.name+'-'+f.start+'.pdf';
-      ov.replaceChildren(h('div',{class:'c'},h('h3',null,'บันทึกใบลาที่ลงลายมือชื่อแล้ว ✓'),h('div',{class:'muted'},'ระบบเก็บให้อัตโนมัติ แอดมินดาวน์โหลดได้'),
-        h('div',{style:'display:flex;gap:8px;flex-wrap:wrap;margin-top:10px'},h('button',{onclick:()=>save(pdf,nm,jd)},'ดาวน์โหลด PDF'),h('button',{class:'s',onclick:done},'เสร็จสิ้น')),
-        h('img',{src:jd,style:'width:100%;max-width:700px;display:block;margin:10px auto;border:1px solid #ccc'})));return;}
-    catch(e){msg(out,e.message,'e');ok.disabled=false;ok.textContent='บันทึกลายมือชื่อ';}};
-  ov.replaceChildren(h('div',{class:'c'},h('h3',null,'ลงลายมือชื่อ'),h('div',{class:'muted'},'เซ็นชื่อด้วยนิ้วหรือเมาส์ในกรอบ แล้วกด "บันทึกลายมือชื่อ" ระบบจะใส่ลงในใบลาและเก็บเป็น PDF ให้เอง'),pad,
-    h('div',{style:'display:flex;gap:8px;flex-wrap:wrap'},ok,clear,skip),out),h('div',{class:'muted',style:'text-align:center'},'ตัวอย่างใบลา'),prev);
-  await drawLeaveForm(prev,f);}
-
 /* ---------- ผู้ดูแล/อาจารย์: รายงานประจำวัน ---------- */
 const TH_D='๐๑๒๓๔๕๖๗๘๙',thn=n=>String(n).replace(/\d/g,c=>TH_D[c]);
 const WD=['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'],MN=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
@@ -329,8 +299,7 @@ async function viewDay(){const v=$('view'),today=HOME.now.slice(0,10);DAYDATE=DA
       const b=h('button',{class:'s d',onclick:async()=>{if(b.dataset.s!=='1'){b.dataset.s='1';b.textContent='ยืนยัน';return;}try{await call('cancelLeave',T,l.id);viewDay();}catch(e){b.textContent=e.message;}}},'ยกเลิก');row.append(b);}
     else row.append(h('div',{class:'muted'},l.reason));
     row.append(docControls(l,false));L.append(row);});
-  const miss=act.filter(l=>!l.hasFile).length;if(act.length)L.insertBefore(h('div',{class:miss?'warn':'ok'},miss?'ยังไม่ลงลายมือชื่อ '+miss+' รายการ':'ลงลายมือชื่อครบทุกรายการ'),L.children[1]||null);
-  v.append(L);
+    v.append(L);
   if(admin){const sel=h('select',null,h('option',{value:''},'— เลือกนักเรียน —'),DAY.roster.map(r=>h('option',{value:r.id},r.id+' '+r.name)));
     const A=h('div',{class:'c'},h('h3',null,'ขาด (ไม่ได้แจ้งลา)'),h('div',null,DAY.absent.map(sid=>{const r=DAY.roster.find(x=>x.id===sid);return h('span',{class:'chip'},sid+' '+(r?r.name:''),' ',h('a',{href:'#',onclick:async ev=>{ev.preventDefault();await call('staffSetAbsent',T,DAYDATE,sid,false);viewDay();}},'✕'));})),
       h('div',{class:'row'},h('div',{class:'g'},sel),h('button',{class:'s',onclick:async()=>{if(!sel.value)return;await call('staffSetAbsent',T,DAYDATE,sel.value,true);viewDay();}},'เพิ่มรายชื่อขาด')));
