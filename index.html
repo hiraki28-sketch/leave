@@ -109,8 +109,17 @@ function viewAcct(){const o=h('input',{type:'password',inputmode:'numeric',maxle
 /* ---------- ใบลา PDF / เอกสารที่เซ็นแล้ว ---------- */
 const TH_ML=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
 function thParts(ds){if(!ds)return {d:'',m:'',y:''};const p=ds.split('-').map(Number);return {d:thn(p[2]),m:TH_ML[p[1]-1],y:thn(p[0]+543)};}
+async function ensureFonts(){
+  try{const tc=document.createElement('canvas').getContext('2d');
+    for(let i=0;i<4;i++){
+      await document.fonts.load(F(40,1),FONT_SAMPLE);await document.fonts.load(F(40,0),FONT_SAMPLE);
+      tc.font=F(40,0);tc.fillText(FONT_SAMPLE,0,40);tc.font=F(40,1);tc.fillText(FONT_SAMPLE,0,40);
+      if(document.fonts.ready)await document.fonts.ready;
+      if(document.fonts.check(F(40,0),FONT_SAMPLE)&&document.fonts.check(F(40,1),FONT_SAMPLE))break;
+      await new Promise(r=>setTimeout(r,150));}
+    await new Promise(r=>setTimeout(r,50));}catch(e){}}
 async function drawLeaveForm(cv,f,sig){
-  try{await document.fonts.load(F(40,1),FONT_SAMPLE);await document.fonts.load(F(40,0),FONT_SAMPLE);}catch(e){}
+  await ensureFonts();
   const W=1654,H=2339,ctx=cv.getContext('2d');cv.width=W;cv.height=H;ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);ctx.fillStyle='#000';ctx.textBaseline='alphabetic';
   const FS=31,XL=190,XR=1464,font=b=>(b?'700 ':'400 ')+FS+'px Sarabun, "Noto Sans Thai", sans-serif';ctx.font=font(0);
   const tw=s=>ctx.measureText(s).width,txt=(s,x,y,al)=>{ctx.textAlign=al||'left';ctx.fillText(s,x,y);ctx.textAlign='left';};
