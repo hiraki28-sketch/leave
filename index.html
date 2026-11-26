@@ -297,7 +297,7 @@ async function viewDay(){const v=$('view'),today=HOME.now.slice(0,10);DAYDATE=DA
   s1.onchange=s2.onchange=s3.onchange=s4.onchange=saveDuty;
   const dutyBox=h('div',{class:'c'},h('h3',null,'นทน.เวร ประจำวันที่ '+thDate(DAYDATE)),h('div',{class:'muted'},'ดึงจากแท็บ Duty ในชีทอัตโนมัติ ถ้าแลกเวร เลือกชื่อใหม่ได้ที่นี่ทันที'),h('label',null,'นทน.เวร'),s1,h('label',null,'นทน.เวรผู้ช่วย'),s2,h('label',null,'เวรรับ อาจารย์ผู้สอน'),s3,h('label',null,'เวรแนะนำอาจารย์ผู้สอน'),s4,telTxt,dm);
   v.replaceChildren(rep,post);v.append(dutyBox);drawReport(cv,d,DAY.venue);
-  const L=h('div',{class:'c'},h('h3',null,'รายการลาของวันนี้'));const act=DAY.leaves.filter(l=>l.status==='active');
+  const L=h('div',{class:'c'},h('h3',null,'รายการลาของวันนี้'));const rk=l=>l.first===false?0:(l.batchEnd&&l.batchStart&&l.batchEnd>l.batchStart?1:2);const act=DAY.leaves.filter(l=>l.status==='active').map((l,i)=>[l,i]).sort((x,y)=>rk(x[0])-rk(y[0])||x[1]-y[1]).map(x=>x[0]);
   if(!act.length)L.append(h('div',{class:'muted'},'ไม่มีรายการลา'));
   act.forEach(l=>{const cont=l.first===false,multi=l.batchEnd&&l.batchStart&&l.batchEnd>l.batchStart;
     const ri=h('input',{value:l.reason});const row=h('div',{class:'row'},h('div',{class:'g'},h('b',null,l.sid+' '+l.name),h('div',{class:'muted'},l.type+slotTxt(l)+(l.byAdmin?' · แอดมินบันทึกแทน':'')+(l.type===TS?(l.evidence?' · ส่งหลักฐานแล้ว':' · ยังไม่ส่งหลักฐาน'):'')),multi?h('div',{class:'muted'},'ลาต่อเนื่อง '+thRange(l.batchStart,l.batchEnd)):null));
