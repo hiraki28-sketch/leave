@@ -232,7 +232,7 @@ async function drawReport(canvas,d,venue){
   const W=1688,H=2190,ctx=canvas.getContext('2d');canvas.width=W;canvas.height=H;
   ctx.fillStyle='#e6e6e6';ctx.fillRect(0,0,W,H);ctx.fillStyle='#FFC000';ctx.fillRect(0,0,W,630);
   ctx.fillStyle='#3a6db0';ctx.fillRect(0,352,W,4);ctx.fillRect(0,362,W,3);
-  ctx.drawImage(L,105,35,215,285);ctx.drawImage(R,1345,55,245,Math.round(245*R.height/R.width));
+  /* ตราและดาว: ขนาด/ตำแหน่งตายตัวตามภาพต้นแบบ (วัดจากภาพรายงาน 18 พ.ย.) ไม่บีบสัดส่วน */ctx.drawImage(L,62,26,304,304);ctx.drawImage(R,1262,18,429,307);
   ctx.fillStyle='#000';ctx.textAlign='center';ctx.textBaseline='middle';
   ctx.font=F(68,1);ctx.fillText('วิทยาลัยเสนาธิการทหาร',830,145);ctx.fillText('สถาบันวิชาการป้องกันประเทศ',830,250);
   ctx.font=F(46,1);ctx.fillText('รายงานยอดการเข้ารับการศึกษาอมรม',844,425);
