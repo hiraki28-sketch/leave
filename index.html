@@ -224,6 +224,7 @@ function layoutBody(ctx,d,fs,draw){
     [['เช้า',d.h3am],['บ่าย',d.h3pm]].forEach(([k,a])=>{if(!a.length)return;const head='('+k+' '+thn(a.length)+' นาย)';
       if(a.length===1)line(head+' '+nm(a[0]),X0,false);else{line(head,X0,false);names(a);}});}
   cnt('ขาด',d.absent.map(a=>({name:a.name,reason:''})),true);
+  cnt('สาย',(d.late||[]).map(a=>({name:a.name,reason:''})),true);
   return y;}
 
 async function drawReport(canvas,d,venue){
@@ -275,7 +276,7 @@ async function viewDay(){const v=$('view'),today=HOME.now.slice(0,10);DAYDATE=DA
   try{DAY=await call('staffDay',T,DAYDATE);}catch(e){v.replaceChildren(h('div',{class:'c e'},e.message));return;}
   const d=DAY.report,admin=ROLE==='admin',cv=h('canvas');
   const dateIn=h('input',{type:'date',value:DAYDATE,onchange:()=>{DAYDATE=dateIn.value||today;viewDay();}});
-  const sum=h('div',{class:'muted'},'มาศึกษา '+d.present+' · ลากิจ '+d.kit.length+' · ลาป่วย '+d.sick.length+' · ลา ๓ ชม. เช้า '+d.h3am.length+' / บ่าย '+d.h3pm.length+' · ขาด '+d.absent.length);
+  const sum=h('div',{class:'muted'},'มาศึกษา '+d.present+' · ลากิจ '+d.kit.length+' · ลาป่วย '+d.sick.length+' · ลา ๓ ชม. เช้า '+d.h3am.length+' / บ่าย '+d.h3pm.length+' · ขาด '+d.absent.length+' · สาย '+(d.late||[]).length);
   const rep=h('div',{class:'c'},h('h3',null,'รายงานประจำวัน'),dateIn,sum,h('div',{style:'margin:10px 0'},cv),
     h('div',{style:'display:flex;gap:8px;flex-wrap:wrap'},
       h('button',{onclick:()=>cv.toBlob(b=>save(b,'report-'+d.date+'.png'),'image/png')},'ดาวน์โหลดรูป (PNG)'),
@@ -303,6 +304,9 @@ async function viewDay(){const v=$('view'),today=HOME.now.slice(0,10);DAYDATE=DA
   if(admin){const sel=h('select',null,h('option',{value:''},'— เลือกนักเรียน —'),DAY.roster.map(r=>h('option',{value:r.id},r.id+' '+r.name)));
     const A=h('div',{class:'c'},h('h3',null,'ขาด (ไม่ได้แจ้งลา)'),h('div',null,DAY.absent.map(sid=>{const r=DAY.roster.find(x=>x.id===sid);return h('span',{class:'chip'},sid+' '+(r?r.name:''),' ',h('a',{href:'#',onclick:async ev=>{ev.preventDefault();await call('staffSetAbsent',T,DAYDATE,sid,false);viewDay();}},'✕'));})),
       h('div',{class:'row'},h('div',{class:'g'},sel),h('button',{class:'s',onclick:async()=>{if(!sel.value)return;await call('staffSetAbsent',T,DAYDATE,sel.value,true);viewDay();}},'เพิ่มรายชื่อขาด')));
+    if(DAY.late){const sel2=h('select',null,h('option',{value:''},'— เลือกนักเรียน —'),DAY.roster.map(r=>h('option',{value:r.id},r.id+' '+r.name)));
+      v.append(h('div',{class:'c'},h('h3',null,'สาย'),h('div',null,DAY.late.map(sid=>{const r=DAY.roster.find(x=>x.id===sid);return h('span',{class:'chip'},sid+' '+(r?r.name:''),' ',h('a',{href:'#',onclick:async ev=>{ev.preventDefault();await call('staffSetLate',T,DAYDATE,sid,false);viewDay();}},'✕'));})),
+        h('div',{class:'row'},h('div',{class:'g'},sel2),h('button',{class:'s',onclick:async()=>{if(!sel2.value)return;await call('staffSetLate',T,DAYDATE,sel2.value,true);viewDay();}},'เพิ่มรายชื่อสาย'))));}
     v.append(A,h('div',{class:'c'},h('h3',null,'ยื่นลาแทนนักเรียน (ข้ามเส้นตายได้)'),leaveForm({roster:DAY.roster,onDone:viewDay})));
     const rs=h('select',null,h('option',{value:''},'— เลือกนักเรียน —'),DAY.roster.map(r=>h('option',{value:r.id},r.id+' '+r.name))),rout=h('div');
     v.append(h('div',{class:'c'},h('h3',null,'รีเซ็ต PIN ให้เพื่อน (กรณีลืม)'),h('div',{class:'row'},h('div',{class:'g'},rs),h('button',{class:'s d',onclick:async ev=>{const bt=ev.target;if(!rs.value)return;
