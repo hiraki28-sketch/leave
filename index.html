@@ -299,7 +299,7 @@ async function viewDay(){const v=$('view'),today=HOME.now.slice(0,10);DAYDATE=DA
     if(admin){row.append(ri,h('button',{class:'s',onclick:async()=>{try{await call('staffSetReason',T,l.id,ri.value);viewDay();}catch(e){}}},'แก้เหตุผล'));
       const b=h('button',{class:'s d',onclick:async()=>{if(b.dataset.s!=='1'){b.dataset.s='1';b.textContent='ยืนยัน';return;}try{await call('cancelLeave',T,l.id);viewDay();}catch(e){b.textContent=e.message;}}},'ยกเลิก');row.append(b);}
     else row.append(h('div',{class:'muted'},l.reason));
-    if(l.first!==false)row.append(docControls(l,false));else row.append(h('div',{class:'muted',style:'flex-basis:100%;font-size:.85em'},'ใบลาชุดเดียวกับวันที่ '+l.batchStart+' (ดาวน์โหลดที่วันแรกของการลา)'));L.append(row);});
+    if(l.first!==false)row.append(docControls(l,false));else row.append(h('div',{class:'muted',style:'flex-basis:100%;font-size:.85em'},'ลาต่อเนื่อง (ต่อจากวันที่ '+l.batchStart+') — ดาวน์โหลดใบลาที่วันแรกของการลา'));L.append(row);});
     v.append(L);
   if(admin){const sel=h('select',null,h('option',{value:''},'— เลือกนักเรียน —'),DAY.roster.map(r=>h('option',{value:r.id},r.id+' '+r.name)));
     const A=h('div',{class:'c'},h('h3',null,'ขาด (ไม่ได้แจ้งลา)'),h('div',null,DAY.absent.map(sid=>{const r=DAY.roster.find(x=>x.id===sid);return h('span',{class:'chip'},sid+' '+(r?r.name:''),' ',h('a',{href:'#',onclick:async ev=>{ev.preventDefault();await call('staffSetAbsent',T,DAYDATE,sid,false);viewDay();}},'✕'));})),
